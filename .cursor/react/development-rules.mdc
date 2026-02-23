@@ -1,0 +1,398 @@
+---
+alwaysApply: false
+---
+# Development Rules
+
+You are an expert in React/TypeScript development. This document contains mandatory rules for development practices, component patterns, hooks, and best practices in the Nexus React project.
+
+## Component Development Rules
+
+### Component Structure
+
+**MANDATORY**: Components MUST follow this structure:
+
+```typescript
+// ✅ CORRECT
+import { type FC } from 'react';
+import { cn } from '@/lib/utils';
+
+interface ComponentProps {
+  title: string;
+  className?: string;
+}
+
+export const Component: FC<ComponentProps> = ({ title, className }) => {
+  return (
+    <div className={cn('base-classes', className)}>
+      <h1>{title}</h1>
+    </div>
+  );
+};
+```
+
+### Component Naming
+
+- **Components**: PascalCase (e.g., `UserProfile`, `LoginForm`)
+- **Props interfaces**: `ComponentNameProps` (e.g., `UserProfileProps`)
+- **Export**: Named export (e.g., `export const Component`)
+
+### Component Props
+
+**MANDATORY**: Always define prop types:
+
+```typescript
+// ✅ CORRECT
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary';
+  onClick?: () => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+export const Button: FC<ButtonProps> = ({ children, variant = 'primary', onClick, disabled, className }) => {
+  // ...
+};
+```
+
+### Event Handlers
+
+**MANDATORY**: Event handlers MUST use "handle" prefix:
+
+```typescript
+// ✅ CORRECT
+const handleClick = () => { ... };
+const handleSubmit = (e: React.FormEvent) => { ... };
+const handleKeyDown = (e: React.KeyboardEvent) => { ... };
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { ... };
+
+// ❌ WRONG
+const onClick = () => { ... };
+const submit = () => { ... };
+```
+
+### Conditional Rendering
+
+**MANDATORY**: Use early returns for conditional rendering:
+
+```typescript
+// ✅ CORRECT
+const Component = ({ user }: { user: User | null }) => {
+  if (!user) return null;
+  if (user.isLoading) return <LoadingSpinner />;
+  
+  return <div>{user.name}</div>;
+};
+
+// ❌ WRONG
+const Component = ({ user }: { user: User | null }) => {
+  return (
+    <>
+      {user && <div>{user.name}</div>}
+      {!user && <div>No user</div>}
+    </>
+  );
+};
+```
+
+## Hooks Development Rules
+
+### Custom Hooks
+
+**MANDATORY**: Custom hooks MUST:
+1. Start with "use" prefix
+2. Be placed in `hooks/` directory
+3. Export from `hooks/index.ts`
+4. Return an object or array
+
+```typescript
+// ✅ CORRECT
+// hooks/useAuth.ts
+export const useAuth = () => {
+  const [user, setUser] = useState<User | null>(null);
+  
+  return {
+    user,
+    login: async (credentials: LoginCredentials) => { ... },
+    logout: () => { ... },
+    isAuthenticated: !!user,
+  };
+};
+
+// hooks/index.ts
+export * from './useAuth';
+```
+
+### Hook Dependencies
+
+**MANDATORY**: Always include all dependencies in useEffect:
+
+```typescript
+// ✅ CORRECT
+useEffect(() => {
+  fetchData(userId);
+}, [userId]);
+
+// ❌ WRONG
+useEffect(() => {
+  fetchData(userId);
+}, []); // Missing userId dependency
+```
+
+### Hook Naming
+
+- **Custom hooks**: `use[Name]` (e.g., `useAuth`, `useToast`)
+- **State hooks**: `use[Name]State` (e.g., `useUserState`)
+- **Effect hooks**: `use[Name]Effect` (e.g., `useAuthEffect`)
+
+## State Management Rules
+
+### Redux Toolkit
+
+**MANDATORY**: Use Redux Toolkit for:
+- Global application state
+- Server state (via RTK Query)
+- Shared state across components
+
+**DO NOT** use Redux for:
+- Local component state (use useState)
+- Form state (use react-hook-form)
+- UI state (use useState)
+
+### Typed Hooks
+
+**MANDATORY**: Always use typed Redux hooks:
+
+```typescript
+// ✅ CORRECT
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+
+const dispatch = useAppDispatch();
+const user = useAppSelector((state) => state.user);
+```
+
+### Local State
+
+**MANDATORY**: Use useState for local component state:
+
+```typescript
+// ✅ CORRECT
+const [isOpen, setIsOpen] = useState(false);
+const [count, setCount] = useState(0);
+```
+
+## Form Handling Rules
+
+### React Hook Form
+
+**MANDATORY**: Use react-hook-form for forms:
+
+```typescript
+// ✅ CORRECT
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const schema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+type FormData = z.infer<typeof schema>;
+
+const LoginForm = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = (data: FormData) => {
+    // Handle submission
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Form fields */}
+    </form>
+  );
+};
+```
+
+### Form Validation
+
+**MANDATORY**: Use Zod for form validation:
+
+```typescript
+// ✅ CORRECT
+import { z } from 'zod';
+
+const userSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email'),
+  age: z.number().min(18, 'Must be 18 or older'),
+});
+```
+
+## Styling Rules
+
+### Tailwind CSS
+
+**MANDATORY**: Use Tailwind CSS classes for styling:
+
+```typescript
+// ✅ CORRECT
+<div className="flex items-center justify-center rounded-lg bg-blue-500 px-4 py-2 text-white">
+
+// ❌ WRONG
+<div style={{ display: 'flex', padding: '1rem' }}>
+```
+
+### Conditional Classes
+
+**MANDATORY**: Use `cn()` utility for conditional classes:
+
+```typescript
+// ✅ CORRECT
+import { cn } from '@/lib/utils';
+
+<div className={cn('base-class', isActive && 'active-class', className)}>
+
+// ❌ WRONG
+<div className={`base-class ${isActive ? 'active-class' : ''}`}>
+```
+
+### Responsive Design
+
+**MANDATORY**: Use Tailwind responsive prefixes:
+
+```typescript
+// ✅ CORRECT
+<div className="w-full md:w-1/2 lg:w-1/3">
+```
+
+## Accessibility Rules
+
+### ARIA Attributes
+
+**MANDATORY**: Include accessibility attributes:
+
+```typescript
+// ✅ CORRECT
+<button
+  onClick={handleClick}
+  aria-label="Close dialog"
+  aria-pressed={isPressed}
+  tabIndex={0}
+>
+  Close
+</button>
+```
+
+### Keyboard Navigation
+
+**MANDATORY**: Support keyboard navigation:
+
+```typescript
+// ✅ CORRECT
+const handleKeyDown = (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    handleClick();
+  }
+};
+
+<button onClick={handleClick} onKeyDown={handleKeyDown}>
+  Click me
+</button>
+```
+
+## Performance Rules
+
+### Code Splitting
+
+**MANDATORY**: Use lazy loading for routes:
+
+```typescript
+// ✅ CORRECT
+const HomePage = lazy(() => import('@/pages/Home').then((m) => ({ default: m.HomePage })));
+```
+
+### Memoization
+
+**MANDATORY**: Use memoization when appropriate:
+
+```typescript
+// ✅ CORRECT
+const MemoizedComponent = memo(Component);
+const memoizedValue = useMemo(() => expensiveCalculation(), [deps]);
+const memoizedCallback = useCallback(() => { ... }, [deps]);
+```
+
+## Testing Rules
+
+### Test Structure
+
+**MANDATORY**: Tests MUST:
+1. Be co-located with components: `ComponentName.test.tsx`
+2. Use test utilities from `@/__tests__/utils`
+3. Follow naming: `describe('ComponentName', () => { ... })`
+
+```typescript
+// ✅ CORRECT
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@/__tests__/utils';
+import { Button } from './Button';
+
+describe('Button', () => {
+  it('renders correctly', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByRole('button')).toBeInTheDocument();
+  });
+});
+```
+
+## Internationalization Rules
+
+### Translation Hook
+
+**MANDATORY**: Use translation hook for i18n:
+
+```typescript
+// ✅ CORRECT
+import { useTranslation } from '@/hooks';
+
+const { t, changeLanguage, currentLanguage } = useTranslation('common');
+const title = t('app.name');
+```
+
+### Translation Keys
+
+**MANDATORY**: Use namespaced translation keys:
+
+```typescript
+// ✅ CORRECT
+t('common:app.name')
+t('errors:network')
+```
+
+## AI Assistant Instructions
+
+When developing components/hooks:
+
+1. **ALWAYS** use TypeScript with proper types
+2. **ALWAYS** use functional components with hooks
+3. **ALWAYS** use const instead of function declarations
+4. **ALWAYS** use early returns for conditional rendering
+5. **ALWAYS** use "handle" prefix for event handlers
+6. **ALWAYS** use path aliases (`@/...`) for imports
+7. **ALWAYS** use Tailwind CSS for styling
+8. **ALWAYS** use `cn()` utility for conditional classes
+9. **ALWAYS** include accessibility attributes
+10. **ALWAYS** handle loading and error states
+11. **ALWAYS** write tests for new components
+12. **NEVER** use inline styles
+13. **NEVER** use class components
+14. **NEVER** skip error handling
+15. **NEVER** commit code without tests (when applicable)

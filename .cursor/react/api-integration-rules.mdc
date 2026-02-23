@@ -1,0 +1,267 @@
+---
+alwaysApply: false
+---
+# API Integration Rules
+
+You are an expert in API integration with React/TypeScript. This document contains mandatory rules for API calls, error handling, and state management in the Nexus React project.
+
+## RTK Query Rules - MANDATORY
+
+### When to Use RTK Query
+
+**MANDATORY**: Use RTK Query for:
+- Server state management
+- API caching
+- Automatic refetching
+- Cache invalidation
+
+**DO NOT** use RTK Query for:
+- Client-side only state
+- Form state
+- UI state
+
+### RTK Query Structure
+
+**MANDATORY**: All RTK Query endpoints MUST extend `baseApi`:
+
+```typescript
+// ✅ CORRECT
+import { baseApi } from '@/store/api/baseApi';
+
+export const userApi = baseApi.injectEndpoints({
+  endpoints: (builder) => ({
+    getUsers: builder.query<User[], void>({
+      query: () => '/users',
+      providesTags: ['Users'],
+    }),
+    createUser: builder.mutation<User, CreateUserDto>({
+      query: (body) => ({
+        url: '/users',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Users'],
+    }),
+  }),
+});
+
+export const { useGetUsersQuery, useCreateUserMutation } = userApi;
+```
+
+### RTK Query Hooks
+
+**MANDATORY**: Use generated hooks from RTK Query:
+
+```typescript
+// ✅ CORRECT
+import { useGetUsersQuery, useCreateUserMutation } from '@/store/api/userApi';
+
+const { data, isLoading, error } = useGetUsersQuery();
+const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
+```
+
+### Cache Tags
+
+**MANDATORY**: Use cache tags for invalidation:
+
+```typescript
+// ✅ CORRECT
+providesTags: ['Users'],
+invalidatesTags: ['Users'],
+```
+
+## Error Handling Rules
+
+### API Error Handling
+
+**MANDATORY**: Use the error handler utility with RTK Query or Axios responses:
+
+```typescript
+// ✅ CORRECT (RTK Query)
+import { handleApiError } from '@/utils/errorHandler';
+import { useGetUsersQuery } from '@/store/api/userApi';
+
+const { error } = useGetUsersQuery();
+const errorMessage = error ? handleApiError(error) : null;
+```
+
+### Error Boundaries
+
+**MANDATORY**: Wrap routes/components with ErrorBoundary:
+
+```typescript
+// ✅ CORRECT
+<ErrorBoundary>
+  <Component />
+</ErrorBoundary>
+```
+
+### Error Context
+
+**MANDATORY**: Use ErrorProvider for global error state:
+
+```typescript
+// ✅ CORRECT
+import { useErrorContext } from '@/context/ErrorContext';
+
+const { error, setError, clearError } = useErrorContext();
+```
+
+### Toast Notifications
+
+**MANDATORY**: Use toast hook for user notifications:
+
+```typescript
+// ✅ CORRECT
+import { useToast } from '@/hooks';
+
+const { toast } = useToast();
+toast.success('Operation completed!');
+toast.error('Something went wrong');
+toast.info('Processing...');
+toast.warning('Please check your input');
+```
+
+## API Response Types
+
+### Type Definitions
+
+**MANDATORY**: Define API response types:
+
+```typescript
+// ✅ CORRECT
+import type { ApiResponse } from '@/services/api/types';
+
+interface UserResponse extends ApiResponse<User> {
+  data: User;
+  message?: string;
+}
+```
+
+### Error Types
+
+**MANDATORY**: Use defined error types:
+
+```typescript
+// ✅ CORRECT
+import type { ApiError } from '@/types';
+
+const error: ApiError = {
+  message: 'Error message',
+  statusCode: 400,
+  errors: { field: ['Error details'] },
+};
+```
+
+## Authentication Rules
+
+### Token Storage
+
+**MANDATORY**: Store tokens in localStorage:
+- `auth_token` - Access token
+- `refresh_token` - Refresh token
+
+**DO NOT** store tokens in state or cookies directly.
+
+### Token Refresh
+
+**AUTOMATIC**: Token refresh is handled by `baseApi` (RTK Query) on 401 errors.
+
+**DO NOT** manually implement token refresh logic.
+
+## Request/Response Logging
+
+### Development Logging
+
+**AUTOMATIC**: Requests/responses from RTK Query are logged where necessary using the shared logger service.
+
+**DO NOT** add `console.log` for API calls - use logger service:
+
+```typescript
+// ✅ CORRECT
+import { logger } from '@/services/logger';
+logger.info('User logged in', { userId: user.id });
+
+// ❌ WRONG
+console.log('User logged in', user);
+```
+
+### Observability & Production Logging
+
+**MANDATORY**:
+- In production code paths, **NEVER** use `console.log`, `console.error`, or any other `console.*` APIs. Always use the shared `logger` service for logging.
+- If error reporting (for example, Sentry) is configured for this project, document in this rule file where it is initialized and how API/runtime errors are reported (for example, from `ErrorBoundary`, global error handlers, or RTK Query error flows).
+
+## API Call Patterns
+
+### GET Requests
+
+```typescript
+// ✅ CORRECT
+const { data, isLoading, error } = useGetUsersQuery();
+```
+
+### POST Requests
+
+```typescript
+// ✅ CORRECT
+const [createUser] = useCreateUserMutation();
+await createUser(userData);
+```
+
+### PUT/PATCH Requests
+
+```typescript
+// ✅ CORRECT
+const [updateUser] = useUpdateUserMutation();
+await updateUser({ id, data });
+```
+
+### DELETE Requests
+
+```typescript
+// ✅ CORRECT
+const [deleteUser] = useDeleteUserMutation();
+await deleteUser(id);
+```
+
+## Loading States
+
+**MANDATORY**: Handle loading states:
+
+```typescript
+// RTK Query
+const { data, isLoading, isFetching } = useGetUsersQuery();
+
+// Manual
+const [isLoading, setIsLoading] = useState(false);
+```
+
+## Error States
+
+**MANDATORY**: Handle error states:
+
+```typescript
+// RTK Query
+const { data, error } = useGetUsersQuery();
+if (error) {
+  const errorMessage = handleApiError(error);
+  toast.error(errorMessage);
+}
+```
+
+## AI Assistant Instructions
+
+When creating API integrations:
+
+1. **ALWAYS** use RTK Query `baseApi` for in-app HTTP calls
+2. **ALWAYS** extend `baseApi` for RTK Query endpoints
+3. **ALWAYS** define endpoints in `constants/api.ts` (and re-export from `services/api/endpoints.ts` if needed)
+5. **ALWAYS** use error handler utility for error handling
+6. **ALWAYS** use toast hook for user notifications
+7. **ALWAYS** handle loading and error states
+8. **ALWAYS** use cache tags for RTK Query cache invalidation
+9. **ALWAYS** use logger service instead of console.log
+10. **NEVER** manually add auth tokens - interceptors handle this
+11. **NEVER** create new Axios instances - use the centralized one
+12. **NEVER** skip error handling - always handle errors gracefully

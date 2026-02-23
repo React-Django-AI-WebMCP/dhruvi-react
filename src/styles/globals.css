@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans:
+      ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+      'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Border */
+    --border-primary: 0 0% 90%;
+    --border-secondary: 0 0% 85%;
+    --border-tertiary: 0 0% 80%;
+
+    /* Background */
+    --background-primary: 0 0% 100%;
+    --background-secondary: 0 0% 98%;
+    --background-tertiary: 0 0% 96%;
+    --background-brand: 220 70% 50%;
+
+    /* Text */
+    --text-primary: 0 0% 10%;
+    --text-secondary: 0 0% 35%;
+    --text-tertiary: 0 0% 50%;
+    --text-brand: 220 70% 45%;
+    --text-alerts-error: 0 70% 45%;
+    --text-danger: 0 70% 50%;
+
+    /* Icon */
+    --icon-primary: 0 0% 20%;
+    --icon-secondary: 0 0% 45%;
+
+    /* Focus ring */
+    --focus-ring-primary: 220 70% 50%;
+
+    /* Typography */
+    --t1-size: 2rem;
+    --t1-line-height: 2.5rem;
+    --t2-size: 1.5rem;
+    --t2-line-height: 2rem;
+    --t3-size: 1.25rem;
+    --t3-line-height: 1.75rem;
+    --t4-size: 1.125rem;
+    --t4-line-height: 1.5rem;
+    --t5-size: 1rem;
+    --t5-line-height: 1.5rem;
+    --t6-size: 0.9375rem;
+    --t6-line-height: 1.25rem;
+    --t7-size: 0.875rem;
+    --t7-line-height: 1.25rem;
+    --t8-size: 0.9375rem;
+    --t8-line-height: 1.375rem;
+    --t9-size: 0.875rem;
+    --t9-line-height: 1.25rem;
+    --t10-size: 0.875rem;
+    --t10-line-height: 1.25rem;
+    --t11-size: 0.8125rem;
+    --t11-line-height: 1.25rem;
+    --t12-size: 0.75rem;
+    --t12-line-height: 1.125rem;
+    --t13-size: 0.75rem;
+    --t13-line-height: 1rem;
+    --t14-size: 0.6875rem;
+    --t14-line-height: 1rem;
+    --t15-size: 0.625rem;
+    --t15-line-height: 0.875rem;
+    --t16-size: 0.75rem;
+    --t16-line-height: 1rem;
+    --t17-size: 0.6875rem;
+    --t17-line-height: 0.875rem;
+    --t18-size: 0.625rem;
+    --t18-line-height: 0.875rem;
+    --t19-size: 0.75rem;
+    --t19-line-height: 1rem;
+
+    /* Shadows */
+    --shadow-elevation100: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-elevation200: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-elevation300: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-elevation400: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-elevation500: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+
+  * {
+    @apply border-border-primary;
+  }
+
+  body {
+    @apply bg-background-primary font-sans text-text-primary antialiased;
+  }
+}

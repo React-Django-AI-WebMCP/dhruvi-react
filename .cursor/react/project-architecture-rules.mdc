@@ -1,0 +1,270 @@
+---
+alwaysApply: false
+---
+# Project Architecture & Scaffolding Rules
+
+You are an expert in React/TypeScript project architecture. This document contains mandatory rules for maintaining the project structure and scaffolding in the Nexus React project.
+
+## Project Structure Requirements
+
+### Directory Organization
+
+**MANDATORY**: All code MUST follow this exact directory structure:
+
+```
+src/
+├── app/                    # App-level configuration ONLY
+│   ├── providers.tsx       # Root providers (Redux, Router, Error, Toast, i18n)
+│   ├── router.tsx          # React Router v7 configuration
+│   └── store.ts            # Redux store configuration
+│
+├── components/
+│   ├── common/             # Shared UI components (shadcn/ui installed here)
+│   │   ├── ui/             # shadcn components directory
+│   │   └── [ComponentName]/ # Component folders with structure:
+│   │       ├── ComponentName.tsx
+│   │       ├── ComponentName.test.tsx
+│   │       ├── ComponentName.stories.tsx
+│   │       └── index.ts
+│   └── layout/             # Layout components ONLY
+│       └── MainLayout.tsx
+│
+├── pages/                  # Route-level screens (generic, no domain assumptions)
+│   └── [PageName]/
+│       └── index.tsx
+│
+├── hooks/                  # Global custom hooks ONLY
+│   ├── use[Name].ts
+│   └── index.ts            # Barrel export
+│
+├── context/                # React contexts ONLY
+│   ├── [Name]Context.tsx
+│   └── index.ts            # Barrel export
+│
+├── constants/              # Application constants ONLY
+│   ├── routes.ts
+│   ├── api.ts
+│   └── index.ts            # Barrel export
+│
+├── config/                 # Configuration files ONLY
+│   ├── env.ts
+│   └── i18n.ts
+│
+├── lib/                    # Library utilities ONLY
+│   ├── utils.ts
+│   └── validators.ts
+│
+├── utils/                  # Application-specific utilities ONLY
+│   ├── errorHandler.ts
+│   └── [Name]Utils.ts
+│
+├── services/               # External service integrations ONLY
+│   ├── api/
+│   │   ├── endpoints.ts
+│   │   └── types.ts
+│   └── logger.ts
+│
+├── store/                  # Redux store ONLY
+│   ├── api/
+│   │   └── baseApi.ts
+│   ├── hooks.ts
+│   └── store.ts
+│
+├── locales/                # i18n translation files ONLY
+│   └── [lang]/
+│       ├── common.json
+│       └── errors.json
+│
+├── __tests__/              # Global test utilities ONLY
+│   ├── setup.ts
+│   ├── utils.tsx
+│   └── mocks/
+│
+├── types/                  # Global TypeScript types ONLY
+│   └── index.ts
+│
+└── styles/                 # Global styles ONLY
+    └── globals.css
+```
+
+### Path Aliases - MANDATORY
+
+**ALWAYS** use path aliases instead of relative imports:
+
+```typescript
+// ✅ CORRECT
+import { Button } from '@/components/common/Button';
+import { useToast } from '@/hooks';
+import { ROUTES } from '@/constants';
+import { store } from '@/store/store';
+
+// ❌ WRONG
+import { Button } from '../../../components/common/Button';
+import { useToast } from '../../hooks/useToast';
+```
+
+**Available Path Aliases:**
+- `@/*` → `./src/*`
+- `@/components/common/*` → `./src/components/common/*`
+- `@/pages/*` → `./src/pages/*`
+- `@/hooks/*` → `./src/hooks/*`
+- `@/context/*` → `./src/context/*`
+- `@/constants/*` → `./src/constants/*`
+- `@/config/*` → `./src/config/*`
+- `@/lib/*` → `./src/lib/*`
+- `@/utils/*` → `./src/utils/*`
+- `@/services/*` → `./src/services/*`
+- `@/store/*` → `./src/store/*`
+- `@/locales/*` → `./src/locales/*`
+- `@/types/*` → `./src/types/*`
+- `@/styles/*` → `./src/styles/*`
+
+### Utilities (lib vs utils)
+
+**MANDATORY**: Utilities MUST be split between `lib/` and `utils/` with clear responsibilities:
+
+- `lib/`:
+  - Pure, framework-agnostic helpers and shared schemas.
+  - No direct coupling to app configuration, routing, Redux, or React components.
+  - Examples: `utils.ts`, `validators.ts`, type-safe helpers that could be moved to a shared library.
+
+- `utils/`:
+  - Application-specific utilities that may depend on app config, types, routing, or services.
+  - Safe place for helpers like `errorHandler.ts`, `dateUtils.ts`, `weekUtils.ts`, or other UI/domain utilities.
+
+When creating new utilities:
+- Put shared, generic logic into `lib/` wherever possible.
+- Put app- or feature-specific logic into `utils/`.
+
+## Component Structure Rules
+
+### Component Organization
+
+**MANDATORY**: Every component in `components/common/` MUST follow this structure:
+
+```
+ComponentName/
+├── ComponentName.tsx        # Component implementation
+├── ComponentName.test.tsx   # Tests (if applicable)
+├── ComponentName.stories.tsx # Storybook stories (if applicable)
+└── index.ts                 # Barrel export
+```
+
+**Example:**
+```typescript
+// ComponentName.tsx
+export const ComponentName = () => { /* ... */ };
+
+// index.ts
+export { ComponentName, type ComponentNameProps } from './ComponentName';
+```
+
+### Component Naming
+
+- **Components**: PascalCase (e.g., `UserProfile.tsx`)
+- **Hooks**: camelCase with `use` prefix (e.g., `useAuth.ts`)
+- **Utilities**: camelCase (e.g., `errorHandler.ts`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `API_ENDPOINTS`)
+- **Types/Interfaces**: PascalCase (e.g., `UserProfileProps`)
+
+## File Placement Rules
+
+### Where to Place Code
+
+1. **Components**: 
+   - Shared/reusable → `components/common/`
+   - Layout-specific → `components/layout/`
+   - Page-specific → Keep with page in `pages/[PageName]/`
+
+2. **Hooks**:
+   - Global/reusable → `hooks/`
+   - Component-specific → Keep with component
+
+3. **API Calls**:
+   - RTK Query endpoints → `store/api/` (extend `baseApi` as the primary HTTP layer)
+
+4. **Constants**:
+   - Routes → `constants/routes.ts`
+   - API endpoints → `constants/api.ts`
+   - Other constants → `constants/index.ts`
+
+5. **Types**:
+   - Global types → `types/index.ts`
+   - Component-specific → Keep with component
+   - API types → `services/api/types.ts`
+
+## Import Organization Rules
+
+**MANDATORY**: Imports MUST be organized in this order:
+
+```typescript
+// 1. React and React-related
+import { useState, useEffect } from 'react';
+import { useRouter } from 'react-router-dom';
+
+// 2. Third-party libraries
+import axios from 'axios';
+import { toast } from 'sonner';
+
+// 3. Internal imports (using path aliases)
+import { Button } from '@/components/common/Button';
+import { useToast } from '@/hooks';
+import { ROUTES } from '@/constants';
+import { store } from '@/store/store';
+
+// 4. Types (if separate import)
+import type { User } from '@/types';
+
+// 5. Styles (if needed)
+import '@/styles/globals.css';
+```
+
+## shadcn/ui Component Installation
+
+**MANDATORY**: All shadcn/ui components MUST be installed into `components/common/ui/`:
+
+```bash
+npx shadcn@latest add [component-name]
+```
+
+Components are automatically configured via `components.json` to use:
+- `@/components/common/ui` for shadcn components
+- `@/lib` for utilities
+
+## Page Structure Rules
+
+**MANDATORY**: All pages MUST:
+1. Be placed in `pages/[PageName]/index.tsx`
+2. Use PascalCase naming (e.g., `HomePage`, `UserProfilePage`)
+3. Export as named export: `export const PageName = () => { ... }`
+4. Use lazy loading in router for code splitting
+
+## Store Structure Rules
+
+**MANDATORY**: Redux store MUST:
+1. Use RTK Query for API calls (extend `baseApi`)
+2. Place API slices in `store/api/`
+3. Use typed hooks: `useAppDispatch`, `useAppSelector`
+4. Export store from `app/store.ts`
+
+## Testing Structure Rules
+
+**MANDATORY**: Tests MUST:
+1. Be co-located with components/files: `ComponentName.test.tsx`
+2. Use test utilities from `@/__tests__/utils`
+3. Follow naming: `describe('ComponentName', () => { ... })`
+4. Use Vitest and React Testing Library
+
+## AI Assistant Instructions
+
+When creating or modifying files:
+
+1. **ALWAYS** use path aliases (`@/...`) instead of relative imports
+2. **ALWAYS** follow the exact directory structure
+3. **ALWAYS** create barrel exports (`index.ts`) for directories
+4. **ALWAYS** organize imports in the specified order
+5. **ALWAYS** use the correct naming conventions
+6. **ALWAYS** place code in the correct directory based on its purpose
+7. **NEVER** create domain-specific folders in `pages/` - keep it generic
+8. **NEVER** mix concerns - keep components, hooks, services separate
+9. **VERIFY** file placement matches the architecture before saving

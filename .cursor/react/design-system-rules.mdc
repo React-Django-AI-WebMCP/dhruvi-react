@@ -1,0 +1,141 @@
+---
+alwaysApply: false
+---
+# Design System Rules - MANDATORY
+
+## CRITICAL: No Arbitrary Values Allowed
+
+**NEVER use arbitrary values in Tailwind classes.** This is strictly prohibited.
+
+### ❌ FORBIDDEN - Arbitrary Values
+
+```tsx
+// WRONG - Do NOT use arbitrary values
+<div className="p-[3px]">           // ❌ Use spacing tokens instead
+<div className="w-[8rem]">           // ❌ Use width tokens instead
+<div className="text-[#191919]">    // ❌ Use color tokens instead
+<div className="text-[0.875rem]">   // ❌ Use typography tokens instead
+<div className="rounded-[4px]">     // ❌ Use border radius tokens instead
+<div className="shadow-[0_1px_2px]"> // ❌ Use shadow tokens instead
+<div className="bg-[#f2f2f2]">      // ❌ Use color tokens instead
+<div className="h-[24px]">          // ❌ Use spacing tokens instead
+```
+
+### ✅ CORRECT - Use Design System Tokens
+
+```tsx
+// CORRECT - Use predefined Tailwind classes from design system
+<div className="p-1">                    // ✅ Uses spacing token (4px)
+<div className="w-32">                   // ✅ Uses width token (128px)
+<div className="text-text-primary">      // ✅ Uses color token from theme
+<div className="text-t10_body_2">        // ✅ Uses typography token
+<div className="rounded-md">             // ✅ Uses border radius token (6px)
+<div className="shadow-elevation100">    // ✅ Uses shadow token
+<div className="bg-background-primary">  // ✅ Uses color token from theme
+<div className="h-6">                     // ✅ Uses spacing token (24px)
+```
+
+## Design System Token Sources
+
+### 1. Spacing, Border Radius, Widths
+**Source:** `src/theme/spacing.ts`
+
+Use Tailwind spacing classes that map to `SPACING` tokens:
+- `p-0`, `p-0.5`, `p-1`, `p-1.5`, `p-2`, `p-2.5`, `p-3`, `p-3.5`, `p-4`, `p-5`, `p-6`, `p-7`, `p-8`, `p-9`, `p-10`, `p-11`, `p-12`, `p-14`, `p-16`, `p-20`, `p-24`, `p-28`, `p-32`, `p-36`, `p-40`, `p-44`, `p-48`, `p-52`, `p-56`, `p-60`, `p-64`, `p-72`, `p-80`, `p-96`
+- Same applies for `m-*`, `gap-*`, `space-*`, `top-*`, `right-*`, `bottom-*`, `left-*`, `inset-*`
+
+Use Tailwind border radius classes that map to `BORDER_RADIUS` tokens:
+- `rounded-none` (0px)
+- `rounded-xs` (2px)
+- `rounded-sm` (4px)
+- `rounded-md` (6px)
+- `rounded-lg` (8px)
+- `rounded-xl` (12px)
+- `rounded-2xl` (16px)
+- `rounded-3xl` (24px)
+- `rounded-full` (50px)
+
+Use Tailwind width/height classes that map to `WIDTH` tokens:
+- Standard spacing values: `w-0`, `w-0.5`, `w-1`, `w-2`, `w-4`, `w-8`, `w-12`, `w-16`, `w-20`, `w-24`, `w-32`, `w-40`, `w-48`, `w-56`, `w-64`, `w-72`, `w-80`, `w-96`
+- Extended values from config: `w-21`, `w-31`, `w-73`, `w-163`, `w-180`, `w-200`, `w-248`, `w-260`, `w-333`, `w-360`
+
+### 2. Colors
+**Source:** `src/theme/colors.ts` and `tailwind.config.ts`
+
+Use semantic color classes from Tailwind config:
+- Text colors: `text-text-primary`, `text-text-secondary`, `text-text-tertiary`, `text-text-brand`, `text-text-alerts-error`, `text-text-danger`
+- Background colors: `bg-background-primary`, `bg-background-secondary`, `bg-background-tertiary`, `bg-background-brand`
+- Border colors: `border-border-primary`, `border-border-secondary`, `border-border-tertiary`
+- Focus ring colors: `focus-visible:ring-focusRing-primary`
+- Icon colors: `text-icon-primary`, `text-icon-secondary`
+
+**If a color is not available in Tailwind config, you MUST:**
+1. Add it to `src/theme/colors.ts` first
+2. Add it to `tailwind.config.ts` theme.extend.colors
+3. Then use the Tailwind class (e.g., `text-text-custom`)
+
+**NEVER hardcode hex values directly in className strings.**
+
+### 3. Typography
+**Source:** `src/theme/typography.ts` and `tailwind.config.ts`
+
+Use typography classes from Tailwind config:
+- `text-t1_heading1`, `text-t2_heading2`
+- `text-t3_sub_heading_1`, `text-t4_sub_heading_2`, `text-t5_sub_heading_3`
+- `text-t6_section_title_1`, `text-t7_section_title_2`
+- `text-t8_section_content`, `text-t9_section_content_small`
+- `text-t10_body_2`, `text-t11_body_3`, `text-t12_body_4`, `text-t13_body_4`
+- `text-t14_caption`, `text-t15_caption_small`
+- `text-t16_label`, `text-t17_label_small`
+- `text-t18_avatar_xs`, `text-t19_avatar_sm`
+
+**NEVER use arbitrary font sizes like `text-[0.875rem]` or `text-[14px]`.**
+
+### 4. Shadows
+**Source:** `src/theme/globalToken.ts` and `tailwind.config.ts`
+
+Use shadow classes from Tailwind config:
+- `shadow-elevation100`
+- `shadow-elevation200`
+- `shadow-elevation300`
+- `shadow-elevation400`
+- `shadow-elevation500`
+
+**NEVER use arbitrary shadows like `shadow-[0_1px_2px_rgba(0,0,0,0.1)]`.**
+
+### 5. Font Weights
+Use standard Tailwind font weight classes:
+- `font-normal` (400)
+- `font-medium` (500)
+- `font-semibold` (600)
+- `font-bold` (700)
+- `font-extrabold` (800)
+
+**NEVER use arbitrary font weights like `font-[500]`.**
+
+## Exception: CSS Variables
+
+The ONLY exception to the "no square brackets" rule is when using CSS variables that are part of the design system:
+
+```tsx
+// ✅ ALLOWED - CSS variables from design system
+<div className="h-[var(--radix-accordion-content-height)]">
+<div className="w-[--cell-size]">
+```
+
+These are acceptable because they reference design system variables, not arbitrary values.
+
+## Code Review Checklist
+
+Before submitting code, verify:
+- [ ] No arbitrary values in Tailwind classes (no `[value]` syntax except CSS variables)
+- [ ] All colors use semantic tokens from `tailwind.config.ts`
+- [ ] All spacing uses tokens from `SPACING` or predefined Tailwind classes
+- [ ] All typography uses tokens from `typography.ts` via Tailwind classes
+- [ ] All border radius uses tokens from `BORDER_RADIUS` via Tailwind classes
+- [ ] All shadows use tokens from `SHADOWS` via Tailwind classes
+- [ ] If a token doesn't exist, it has been added to the design system first
+
+## Enforcement
+
+This rule is **MANDATORY** and applies to ALL code in the project. Any code using arbitrary values will be rejected during code review.

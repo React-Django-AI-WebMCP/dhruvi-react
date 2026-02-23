@@ -1,0 +1,334 @@
+---
+alwaysApply: false
+---
+# Code Formatting & Linting Rules
+
+You are an expert in React/TypeScript code formatting. This document contains mandatory formatting and linting rules for all code in the Nexus React project.
+
+## ESLint - MANDATORY
+
+### Linting Requirements
+
+- **ALL TypeScript/React files MUST pass ESLint** before being committed
+- **ESLint** is configured with React 19, TypeScript, accessibility, and import ordering rules
+- Linting runs automatically via pre-commit hooks and CI checks
+- Configuration is defined in `.eslintrc.cjs`
+
+### When Linting is Required
+
+1. **Before writing any code**: Ensure code follows ESLint rules
+2. **After generating new code**: Run `pnpm lint` to check for linting errors
+3. **After modifying existing code**: Verify modified code passes ESLint checks
+4. **Before committing**: All code must pass `pnpm lint` validation
+
+### ESLint Rules
+
+**MANDATORY Rules:**
+- React 19 rules (no `react/react-in-jsx-scope` needed)
+- TypeScript strict rules
+- React Hooks rules
+- JSX A11y (accessibility) rules
+- Import ordering and organization
+- Tailwind CSS class ordering
+- No unused variables (except prefixed with `_`)
+
+### Commands
+
+- Check all files: `pnpm lint`
+- Fix auto-fixable issues: `pnpm lint:fix`
+- Check specific file: `pnpm lint src/path/to/file.tsx`
+
+## Prettier - MANDATORY
+
+### Formatting Requirements
+
+- **ALL files MUST be formatted with Prettier** before being committed
+- **Line length**: 100 characters
+- **Tailwind CSS plugin**: Automatically sorts Tailwind classes
+- Configuration is defined in `.prettierrc`
+
+### When Formatting is Required
+
+1. **Before writing any code**: Always format code with Prettier
+2. **After generating new code**: Run `pnpm format` after generating new code
+3. **After modifying existing code**: Ensure modified code follows Prettier rules
+4. **Before committing**: All code must pass `pnpm format:check` validation
+
+### Prettier Configuration
+
+```json
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "quoteProps": "as-needed",
+  "jsxSingleQuote": false,
+  "plugins": ["prettier-plugin-tailwindcss"]
+}
+```
+
+### Commands
+
+- Format all files: `pnpm format`
+- Check formatting: `pnpm format:check`
+- Format specific file: `pnpm format src/path/to/file.tsx`
+
+## TypeScript - MANDATORY
+
+### Type Checking Requirements
+
+- **ALL TypeScript files MUST pass type checking** before being committed
+- **Strict mode**: Enabled with `noUncheckedIndexedAccess: true`
+- **No unused locals/parameters**: Enforced (except prefixed with `_`)
+- Configuration is defined in `tsconfig.json`
+
+### When Type Checking is Required
+
+1. **Before writing any code**: Ensure types are correct
+2. **After generating new code**: Run `pnpm type-check` after generating new code
+3. **After modifying existing code**: Verify modified code passes type checks
+4. **Before committing**: All code must pass `pnpm type-check` validation
+
+### TypeScript Rules
+
+**MANDATORY Rules:**
+- Use TypeScript for all new files
+- Avoid `any` type - use `unknown` or proper types
+- Use type inference where possible
+- Define types for component props
+- Use interfaces for object shapes
+- Use type aliases for unions/intersections
+
+### Commands
+
+- Type check: `pnpm type-check`
+- Type check specific file: `tsc --noEmit src/path/to/file.tsx`
+
+## Testing Library - MANDATORY
+
+### Testing Library Version Alignment
+
+**CRITICAL**: Testing Library versions MUST be aligned to prevent type mismatches:
+
+- **@testing-library/react**: `^14.3.1` (NOT v16 - incompatible with React 19)
+- **@testing-library/dom**: `10` (explicit dependency required)
+- **@testing-library/jest-dom**: `^6.5.0`
+- **@testing-library/user-event**: `^14.5.2`
+
+**DO NOT install**:
+- `@types/testing-library__react` (obsolete, breaks types)
+- `@types/testing-library__dom` (obsolete, breaks types)
+
+### TypeScript Configuration
+
+**MANDATORY**: `tsconfig.json` MUST include:
+
+```json
+{
+  "compilerOptions": {
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
+    "skipLibCheck": true
+  }
+}
+```
+
+- `skipLibCheck: true` is acceptable here to handle library typing conflicts
+- `types` array ensures jest-dom matchers are recognized
+
+### Test Utility Pattern
+
+**MANDATORY**: Test utilities in `src/__tests__/utils.tsx` MUST:
+
+1. Import `render` as `rtlRender` from `@testing-library/react`
+2. Create custom render wrapper with providers
+3. Export explicitly (NOT `export *`) to avoid name conflicts:
+
+```typescript
+import { render as rtlRender, type RenderOptions } from '@testing-library/react';
+// ... providers ...
+
+const customRender = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>
+) => rtlRender(ui, { wrapper: AllTheProviders, ...options });
+
+// Explicit exports (NOT export *)
+export {
+  screen,
+  waitFor,
+  waitForElementToBeRemoved,
+  within,
+  fireEvent,
+  act,
+  cleanup,
+  renderHook,
+  type RenderResult,
+  type RenderOptions,
+} from '@testing-library/react';
+export { customRender as render };
+```
+
+### Dependency Management
+
+**MANDATORY**: After installing Testing Library packages:
+
+1. Run `pnpm dedupe` to ensure single version of `@testing-library/dom`
+2. Verify with: `pnpm why @testing-library/dom`
+3. If type errors persist, clean install:
+   ```bash
+   rm -rf node_modules pnpm-lock.yaml
+   pnpm install
+   ```
+
+### Common Issues
+
+**Problem**: TypeScript type mismatch errors with Testing Library
+
+**Solution**:
+1. Verify versions match exactly: `@testing-library/react@14`, `@testing-library/dom@10`
+2. Remove obsolete `@types/testing-library__*` packages
+3. Ensure `tsconfig.json` has `types: ["vitest/globals", "@testing-library/jest-dom"]`
+4. Run `pnpm dedupe` and reinstall if needed
+
+**Problem**: Multiple exports of name 'render'
+
+**Solution**: Use explicit exports instead of `export *` in test utilities
+
+## Pre-commit Hooks - MANDATORY
+
+### Automatic Checks
+
+The following checks run automatically before commits (via Husky):
+
+1. **lint-staged**: Runs ESLint and Prettier on staged files
+2. **commitlint**: Validates commit message format
+3. **Branch validation**: Validates branch name format
+
+### Configuration
+
+- Pre-commit hook: `.husky/pre-commit`
+- Commit message hook: `.husky/commit-msg`
+- Branch validation: `.husky/prepare-commit-msg`
+- lint-staged config: `.lintstagedrc.js`
+
+## Code Style Rules
+
+### General Rules
+
+1. **Use const instead of function declarations**:
+   ```typescript
+   // ✅ CORRECT
+   const handleClick = () => { ... };
+   
+   // ❌ WRONG
+   function handleClick() { ... }
+   ```
+
+2. **Use early returns**:
+   ```typescript
+   // ✅ CORRECT
+   if (!user) return null;
+   return <div>...</div>;
+   
+   // ❌ WRONG
+   if (user) {
+     return <div>...</div>;
+   }
+   return null;
+   ```
+
+3. **Use descriptive names**:
+   ```typescript
+   // ✅ CORRECT
+   const handleUserLogin = () => { ... };
+   const isAuthenticated = true;
+   
+   // ❌ WRONG
+   const handle = () => { ... };
+   const flag = true;
+   ```
+
+4. **Event handlers use "handle" prefix**:
+   ```typescript
+   // ✅ CORRECT
+   const handleClick = () => { ... };
+   const handleSubmit = () => { ... };
+   const handleKeyDown = () => { ... };
+   ```
+
+### Import Organization
+
+**MANDATORY**: Imports MUST be organized as:
+
+```typescript
+// 1. React imports
+import { useState, useEffect } from 'react';
+
+// 2. Third-party imports
+import axios from 'axios';
+import { toast } from 'sonner';
+
+// 3. Internal imports (path aliases)
+import { Button } from '@/components/common/Button';
+import { useToast } from '@/hooks';
+
+// 4. Type imports
+import type { User } from '@/types';
+
+// 5. Styles
+import '@/styles/globals.css';
+```
+
+ESLint automatically enforces this with `import/order` rule.
+
+### Tailwind CSS Class Ordering
+
+**MANDATORY**: Tailwind classes MUST be ordered correctly (enforced by Prettier plugin):
+
+```tsx
+// ✅ CORRECT (automatically sorted by Prettier)
+<div className="flex items-center justify-center rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
+
+// Classes are automatically sorted by Prettier plugin
+```
+
+## AI Assistant Instructions
+
+When generating or editing code:
+
+1. **ALWAYS format code** according to Prettier rules (line-length: 100)
+2. **ALWAYS ensure code passes ESLint** (run `pnpm lint` after changes)
+3. **ALWAYS ensure code passes TypeScript** (run `pnpm type-check` after changes)
+4. **ALWAYS organize imports** in the specified order
+5. **ALWAYS use path aliases** (`@/...`) instead of relative imports
+6. **ALWAYS use const** instead of function declarations
+7. **ALWAYS use early returns** for better readability
+8. **ALWAYS use descriptive names** with proper prefixes
+9. **VERIFY formatting** by running `pnpm format:check` before considering task complete
+10. **VERIFY linting** by running `pnpm lint` before considering task complete
+11. **VERIFY types** by running `pnpm type-check` before considering task complete
+12. **NEVER commit** unformatted code, code with linting errors, or type errors - it will fail CI checks
+
+## Troubleshooting
+
+If linting fails:
+1. Run `pnpm lint:fix` to auto-fix issues
+2. Check `.eslintrc.cjs` for specific rules
+3. Ensure pre-commit hooks are installed: `pnpm prepare`
+
+If formatting fails:
+1. Run `pnpm format` to format all files
+2. Check `.prettierrc` for configuration
+3. Ensure Prettier Tailwind plugin is installed
+
+If type checking fails:
+1. Check `tsconfig.json` for strict settings
+2. Ensure all types are properly defined
+3. Use type assertions only when necessary
